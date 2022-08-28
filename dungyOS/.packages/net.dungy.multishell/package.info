@@ -1,0 +1,8 @@
+{
+    "info": {
+        "identifier": "net.dungy.multishell",
+        "name": "Multitasking and Windowing System",
+        "description": "A modified version of the default multishell that uses key-based identifiers and has no menubar to allow programs to run in fullscreen."
+    },
+    "entrypoint": "custom_multishell.lua"
+}
