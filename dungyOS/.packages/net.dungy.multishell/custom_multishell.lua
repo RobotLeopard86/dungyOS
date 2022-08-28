@@ -279,10 +279,26 @@ launchProcess(true, {
     ["shell"] = shell,
     ["multishell"] = multishell,
     ["require"] = env.require
-}, "/.packages/net.dungy.startup/onboot.lua")
+}, "/.packages/net.dungy.login/login.lua")
 
 -- Run processes
 while #tProcesses > 0 do
+
+    if coroutine.status(tProcesses[nCurrentProcess].co) == "dead" then
+        local nOldProcess = nCurrentProcess
+        if #tProcesses > 1 then
+            if nCurrentProcess > 1 then
+                selectProcess(nCurrentProcess - 1)
+            else
+                selectProcess(nCurrentProcess + 1)
+            end
+        end
+        table.remove(tProcesses, nOldProcess)
+        if #tProcesses == 0 then
+            break
+        end
+    end
+
     setMenuVisible(false)
     -- Get the event
     local tEventData = table.pack(os.pullEventRaw())
@@ -387,4 +403,3 @@ end
 
 -- Shutdown
 term.redirect(parentTerm)
-parentTerm.write("Sussy end")

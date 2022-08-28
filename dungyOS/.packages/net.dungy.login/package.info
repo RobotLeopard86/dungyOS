@@ -3,7 +3,5 @@
         "name": "Startup Sequence",
         "description": "The code for logging in the user."
     },
-    "identifier": "net.dungy.startup",
-    "type": "sys-program",
-    "entrypoint": "core.lua"
+    "identifier": "net.dungy.login"
 }
