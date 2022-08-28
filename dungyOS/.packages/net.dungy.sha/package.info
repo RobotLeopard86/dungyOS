@@ -1,8 +1,9 @@
 {
     "info": {
-        "identifier": "net.dungy.sha",
         "name": "Hashing Library",
         "description": "A SHA-256 implementation for dungyOS."
     },
+    "identifier": "net.dungy.sha",
+    "type": "sys-library",
     "entrypoint": "sha.lua"
 }

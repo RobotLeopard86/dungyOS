@@ -71,8 +71,8 @@ end
 local function launchProcess(bFocus, tProgramEnv, sProgramPath, ...)
     local tProgramArgs = table.pack(...)
     local tProcess = {}
+    local nProcess = #tProcesses + 1
     tProcess.sTitle = fs.getName(sProgramPath)
-    local nProcess = "#" .. string.sub(tProcess.sTitle, 0, string.len(tProcess.sTitle) - 4)
     if bShowMenu then
         tProcess.window = window.create(parentTerm, 1, 2, w, h - 1, false)
     else
@@ -171,13 +171,13 @@ end
 
 --- Change the currently visible process.
 --
--- @tparam string n The process to switch to.
+-- @tparam number n The process to switch to.
 -- @treturn boolean If the process was changed successfully. This will
 -- return @{false} if there is no process with this id.
 -- @see getFocus
 function multishell.setFocus(n)
-    expect(1, n, "string")
-    if tProcesses[n] ~= nil then
+    expect(1, n, "number")
+    if n >= 1 and n <= #tProcesses then
         selectProcess(n)
         redrawMenu()
         return true
@@ -189,29 +189,15 @@ end
 --
 -- This starts as the name of the program, but may be changed using
 -- @{multishell.setTitle}.
--- @tparam string n The process key.
+-- @tparam number n The process id.
 -- @treturn string|nil The current process title, or @{nil} if the
 -- process doesn't exist.
 function multishell.getTitle(n)
-    expect(1, n, "string")
-    if tProcesses[n] ~= nil  then
+    expect(1, n, "number")
+    if n >= 1 and n <= #tProcesses  then
         return tProcesses[n].sTitle
     end
     return nil
-end
-
---- Kills the process with the given ID.
---
--- @tparam string process The process key.
--- @treturn boolean Returns true if the process was killed, false if there was
--- no process to kill or it was an attempt to kill the current process
-function multishell.kill(process)
-    expect(1, process, "string")
-    if tProcesses[process] ~= nil and process ~= nRunningProcess then
-        table.remove(tProcesses, process)
-        return true
-    end
-    return false
 end
 
 --- Return all tab titles
@@ -228,16 +214,16 @@ end
 
 --- Set the title of the given process.
 --
--- @tparam string n The process key.
+-- @tparam number n The process id.
 -- @tparam string title The new process title.
 -- @see getTitle
 -- @usage Change the title of the current process
 --
 --     multishell.setTitle(multishell.getCurrent(), "Hello")
 function multishell.setTitle(n, title)
-    expect(1, n, "string")
+    expect(1, n, "number")
     expect(2, title, "string")
-    if tProcesses[n] ~= nil then
+    if n >= 1 and n <= #tProcesses then
         setProcessTitle(n, title)
         redrawMenu()
     end
@@ -270,7 +256,6 @@ function multishell.launch(tProgramEnv, sProgramPath, ...)
     expect(1, tProgramEnv, "table")
     expect(2, sProgramPath, "string")
     local previousTerm = term.current()
-    setMenuVisible(#tProcesses + 1 >= 2)
     local nResult = launchProcess(false, tProgramEnv, sProgramPath, ...)
     redrawMenu()
     term.redirect(previousTerm)
@@ -289,12 +274,12 @@ parentTerm.clear()
 setMenuVisible(false)
 local r = require "cc.require"
 local env = setmetatable({}, { __index = _ENV })
-env.require, env.package = r.make(env, "/.tide_os/programs/lib")
+env.require, env.package = r.make(env, "/.packages")
 launchProcess(true, {
     ["shell"] = shell,
     ["multishell"] = multishell,
-    ["require_env"] = env
-}, "/.tide_os/programs/core.lua")
+    ["require"] = env.require
+}, "/.packages/net.dungy.startup/onboot.lua")
 
 -- Run processes
 while #tProcesses > 0 do
@@ -313,7 +298,7 @@ while #tProcesses > 0 do
         -- Passthrough to current process
         resumeProcess(nCurrentProcess, table.unpack(tEventData, 1, tEventData.n))
         if cullProcess(nCurrentProcess) then
-            setMenuVisible(#tProcesses >= 2)
+            setMenuVisible(false)
             redrawMenu()
         end
 
@@ -347,7 +332,7 @@ while #tProcesses > 0 do
             -- Passthrough to current process
             resumeProcess(nCurrentProcess, sEvent, button, x, bShowMenu and y - 1 or y)
             if cullProcess(nCurrentProcess) then
-                setMenuVisible(#tProcesses >= 2)
+                setMenuVisible(false)
                 redrawMenu()
             end
         end
@@ -367,7 +352,7 @@ while #tProcesses > 0 do
             -- Passthrough to current process
             resumeProcess(nCurrentProcess, sEvent, p1, x, bShowMenu and y - 1 or y)
             if cullProcess(nCurrentProcess) then
-                setMenuVisible(#tProcesses >= 2)
+                setMenuVisible(false)
                 redrawMenu()
             end
         end
@@ -402,3 +387,4 @@ end
 
 -- Shutdown
 term.redirect(parentTerm)
+parentTerm.write("Sussy end")

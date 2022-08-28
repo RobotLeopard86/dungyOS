@@ -1,9 +1,11 @@
 if pocket or turtle then
     printError("ERROR: dungyOS must be run on a regular computer!")
+    return
 end
 
 if not term.isColor() then
     printError("ERROR: dungyOS requires color!")
+    return
 end
 
 os.pullEvent = os.pullEventRaw
@@ -59,3 +61,4 @@ sleep(0.25)
 term.clear()
 term.setTextColor(colors.white)
 term.setCursorPos(1, 1)
+shell.run("/.packages/net.dungy.multishell/custom_multishell.lua")
