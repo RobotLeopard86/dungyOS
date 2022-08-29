@@ -1,0 +1,7 @@
+{
+    "info": {
+        "name": "dungyOS Desktop",
+        "description": "The desktop. Don't delete this."
+    },
+    "identifier": "net.dungy.desktop"
+}

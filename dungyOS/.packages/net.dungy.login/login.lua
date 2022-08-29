@@ -1,3 +1,5 @@
+local hash = require("net.dungy.sha", "sha")
+
 term.clear();
 
 local bg = paintutils.loadImage("/.packages/net.dungy.login/loginbg.ccimg")
@@ -21,10 +23,63 @@ local function adjustForWindowCoordsWhenScrolling(x, y, scroll)
     return x, (y - 9) + scroll
 end
 
+local function drawCentered(text, y)
+    local w, h = window.getSize()
+    window.setCursorPos((w / 2) - (string.len(text) / 2), y)
+    window.write(text)
+end
+
+local function saltAndHash(value)
+    local saltedInput = value .. salt
+    local hashedInput = hash(saltedInput)
+    return hashedInput
+end
+
 local function password(user)
     window.clear()
-    window.setCursorPos(1, 1)
-    window.write(user.displayname .. " was selected.")
+    window.setTextColor(colors.blue)
+    drawCentered("Hi, " .. user.displayname .. "!", 1)
+    drawCentered("Please enter your password:", 2)
+    window.setCursorPos(1, 4)
+    window.setBackgroundColor(colors.white)
+    window.write("                                 ")
+    window.setCursorPos(1, 4)
+    local default = term.current()
+    term.redirect(window)
+    local inputtedPassword = read("*")
+    term.redirect(default)
+    local hashed = saltAndHash(inputtedPassword)
+
+    window.clear()
+
+    if hashed == user.password then
+        window.setTextColor(colors.lime)
+        drawCentered("Welcome, " .. user.displayname .. "!", 1)
+        drawCentered("Logging you in...", 2)
+        sleep(1)
+
+        local usrData = {
+            username = user.username,
+            displayname = user.displayname,
+            permission = user.permissions
+        }
+
+        local tabId = multishell.launch({
+            ["shell"] = shell,
+            ["multishell"] = multishell,
+            ["require"] = require,
+            ["read"] = read,
+            ["user"] = usrData
+        }, "/.packages/net.dungy.desktop/temp_desktop.lua")
+        multishell.setFocus(tabId)
+        return
+    else
+        window.setTextColor(colors.red)
+        drawCentered("Incorrect password.", 1)
+        drawCentered("Please try again.", 2)
+        sleep(1)
+        password(user)
+    end
 end
 
 local function drawUsernames()
@@ -100,10 +155,38 @@ local function drawUsernames()
 
                 if selected ~= -1 then
                     password(actions[selected].argument)
+                    return
                 end
             end
         end
     end
+end
+
+local function hashing()
+    window.clear()
+    window.setCursorPos(1, 1)
+    window.write("Enter a value:")
+    window.setCursorPos(1, 2)
+    local default = term.current()
+    term.redirect(window)
+    local input = read()
+    term.redirect(default)
+    window.setCursorPos(1, 4)
+    window.write("The resulting hash was:")
+    window.setCursorPos(1, 5)
+    local hashed = saltAndHash(input)
+    window.write(hashed)
+    window.setCursorPos(1, 7)
+    window.write("Save to file:")
+    window.setCursorPos(1, 8)
+    local path = read()
+    local handle = fs.open(path, "a")
+    handle.writeLine(input .. ": " .. hashed)
+    handle.close()
+    window.setCursorPos(1, 10)
+    window.write("Done! Rebooting...")
+    sleep(0.5)
+    os.reboot()
 end
 
 local function drawFirstOptions()
@@ -114,6 +197,8 @@ local function drawFirstOptions()
     window.write("Reboot")
     window.setCursorPos(1, 5)
     window.write("Shut down")
+    window.setCursorPos(1, 7)
+    window.write("Hashing (DEV TOOL)")
 
     local actions = {
         {
@@ -136,6 +221,13 @@ local function drawFirstOptions()
             toX = 9,
             toY = 5,
             trigger = os.shutdown
+        },
+        {
+            fromX = 1,
+            fromY = 7,
+            toX = 18,
+            toY = 7,
+            trigger = hashing
         }
     }
 
@@ -156,9 +248,22 @@ local function drawFirstOptions()
 
             if selected ~= -1 then
                 actions[selected].trigger()
+                return
             end
         end
     end
 end
 
 drawFirstOptions()
+
+term.setBackgroundColor(colors.black)
+term.setTextColor(colors.white)
+term.setCursorPos(1, 1)
+window.setVisible(false)
+window = nil
+term.clear()
+print("Enjoy dungyOS! I just stay here so that the computer doesn't crash. I'm basically just the immortal task. Also, why are you here? You're not supposed to see this.")
+
+while true do
+    sleep(0.05)
+end

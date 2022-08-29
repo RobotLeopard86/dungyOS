@@ -273,12 +273,22 @@ end
 parentTerm.clear()
 setMenuVisible(false)
 local r = require "cc.require"
-local env = setmetatable({}, { __index = _ENV })
-env.require, env.package = r.make(env, "/.packages")
+
+local function betterRequire(packageName, file)
+    local env = setmetatable({}, { __index = _ENV })
+    env.require = r.make(env, "/.packages/" .. packageName)
+    return env.require(file)
+end
+
+local handle = fs.open("/.system-storage/salt.txt", "r")
+local salty = handle.readAll()
+handle.close()
+
 launchProcess(true, {
     ["shell"] = shell,
     ["multishell"] = multishell,
-    ["require"] = env.require
+    ["require"] = betterRequire,
+    ["salt"] = salty
 }, "/.packages/net.dungy.login/login.lua")
 
 -- Run processes
