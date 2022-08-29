@@ -17,10 +17,14 @@ local function adjustForWindowCoords(x, y)
     return x, y - 9
 end
 
+local function adjustForWindowCoordsWhenScrolling(x, y, scroll)
+    return x, (y - 9) + scroll
+end
+
 local function password(user)
     window.clear()
     window.setCursorPos(1, 1)
-    window.write(user.displayName .. " was selected.")
+    window.write(user.displayname .. " was selected.")
 end
 
 local function drawUsernames()
@@ -29,6 +33,7 @@ local function drawUsernames()
     local filenames = fs.list("/.system-storage/users")
 
     local users = {}
+    local actions = {}
     
     for _, file in ipairs(filenames) do
         local path = "/.system-storage/users/" .. file
@@ -42,6 +47,13 @@ local function drawUsernames()
     for _, usr in ipairs(users) do
         window.setCursorPos(1, drawIndex)
         window.write(usr.displayname)
+        table.insert(actions, {
+            fromX = 1,
+            fromY = drawIndex,
+            toX = string.len(usr.displayname),
+            toY = drawIndex,
+            argument = usr
+        })
         drawIndex = drawIndex + 2
     end
 
@@ -74,8 +86,24 @@ local function drawUsernames()
                 end
             end
         end
+        else if event == "mouse_click" and pressed == 1 then
+                local selected = -1
+                local adjX, adjY = adjustForWindowCoordsWhenScrolling(x, y, windowScroll - 1)
+
+                for i, action in ipairs(actions) do
+
+                    if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                        selected = i
+                        break
+                    end
+                end
+
+                if selected ~= -1 then
+                    password(actions[selected].argument)
+                end
+            end
+        end
     end
-end
 end
 
 local function drawFirstOptions()
@@ -115,7 +143,6 @@ local function drawFirstOptions()
         local event, button, x, y = os.pullEvent("mouse_click")
 
         if button == 1 then
-
             local selected = -1
             local adjX, adjY = adjustForWindowCoords(x, y)
 
