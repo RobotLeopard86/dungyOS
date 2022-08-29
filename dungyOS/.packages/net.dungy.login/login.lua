@@ -9,7 +9,7 @@ term.setCursorPos(1, 7)
 print("Welcome to dungyOS!")
 print("Please select an option:")
 
-local window = window.create(term.current(), 1, 10, 33, 10, true)
+local window = window.create(term.current(), 1, 10, 33, 200, true)
 window.setBackgroundColor(colors.white)
 window.setTextColor(colors.blue)
 
@@ -17,8 +17,65 @@ local function adjustForWindowCoords(x, y)
     return x, y - 9
 end
 
+local function password(user)
+    window.clear()
+    window.setCursorPos(1, 1)
+    window.write(user.displayName .. " was selected.")
+end
+
 local function drawUsernames()
     window.clear()
+
+    local filenames = fs.list("/.system-storage/users")
+
+    local users = {}
+    
+    for _, file in ipairs(filenames) do
+        local path = "/.system-storage/users/" .. file
+        local handle = fs.open(path, "r")
+        table.insert(users, textutils.unserializeJSON(handle.readAll()))
+        handle.close()
+    end
+
+    local drawIndex = 1
+
+    for _, usr in ipairs(users) do
+        window.setCursorPos(1, drawIndex)
+        window.write(usr.displayname)
+        drawIndex = drawIndex + 2
+    end
+
+    local windowScroll = 1
+    local maxScroll = drawIndex - 10
+
+    while true do
+        
+        local event, pressed, x, y = os.pullEvent()
+
+        if event == "key" then
+            if pressed == keys.down then
+                if windowScroll < maxScroll then
+                    windowScroll = windowScroll + 2
+                    window.scroll(2)
+                end
+            else if pressed == keys.up then
+                if windowScroll > 1 then
+                    windowScroll = windowScroll - 2
+                    
+                    window.clear()
+                    drawIndex = 1
+                    for _, usr in ipairs(users) do
+                        window.setCursorPos(1, drawIndex)
+                        window.write(usr.displayname)
+                        drawIndex = drawIndex + 2
+                    end
+
+                    window.scroll(windowScroll - 1)
+                end
+            end
+        end
+    end
+end
 end
 
 local function drawFirstOptions()
@@ -61,8 +118,6 @@ local function drawFirstOptions()
 
             local selected = -1
             local adjX, adjY = adjustForWindowCoords(x, y)
-
-            window.write(adjX .. ", " .. adjY)
 
             for i, action in ipairs(actions) do
 
