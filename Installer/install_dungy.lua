@@ -1,3 +1,10 @@
+print("Please enter repository owner:")
+local owner = read()
+print("Please enter repository name:")
+local repo = read()
+print("Loading installer...")
+sleep(1)
+
 local expect = require "cc.expect".expect
 
 local function ends_with(str, suffix)
@@ -24,18 +31,10 @@ local function split(str, deliminator)
     return out
 end
 
-local function convertURL(url, tree)
-    local splitURL = split(url, "/")
-    
-    if ends_with(splitURL[5], ".git") then 
-        splitURL[5] = string.sub(splitURL[5], 0, string.len(splitURL[5]) - 4) 
-    end
+local function convertURL(tree)
+    local api = "https://api.github.com/repos/" .. owner .. "/" .. repo .. "/git/trees/" .. tree .. "?recursive=1"
 
-    local repoSection = splitURL[4] .. "/" .. splitURL[5]
-
-    local api = "https://api.github.com/repos/" .. repoSection .. "/git/trees/" .. tree .. "?recursive=1"
-
-    local raw = "https://raw.githubusercontent.com/" .. repoSection .. "/" .. tree .. "/"
+    local raw = "https://raw.githubusercontent.com/" .. owner .. "/" .. repo .. "/" .. tree .. "/"
 
     return {
         apiPath = api,
@@ -43,8 +42,8 @@ local function convertURL(url, tree)
     }
 end
 
-local function gitDownload(repoURL, tree, output)
-    local converted = convertURL(repoURL, tree)
+local function gitDownload(tree, output)
+    local converted = convertURL(tree)
     print("Making tree download request...")
     local request = http.get(converted.apiPath)
     if request ~= nil then
@@ -66,13 +65,6 @@ local function gitDownload(repoURL, tree, output)
         end
     end
 end
-
-print("Please enter repository owner:")
-local owner = read()
-print("Please enter repository name:")
-local repo = read()
-print("Loading installer...")
-sleep(1)
 
 term.setPaletteColor(colors.lightGray, 0xCCCCCC)
 term.setPaletteColor(colors.gray, 0x595959)
@@ -575,8 +567,7 @@ local function runInstallation()
     sleep(0.25)
 
     print("Installing...")
-    local repoURL = "https://github.com/" .. owner .. "/" .. repo .. "/"
-    gitDownload(repoURL, toInstall, "/downloads")
+    gitDownload(toInstall, "/downloads")
     print("Cleaning up...")
     fs.makeDir("/tmp")
     fs.copy("/downloads/dungyOS", "/tmp")
@@ -605,16 +596,16 @@ local function installerWarning()
     local actions = {
         {
             fromX = 1,
-            fromY = 8,
+            fromY = 9,
             toX = 8,
-            toY = 8,
+            toY = 9,
             trigger = runInstallation,
         },
         {
             fromX = 1,
-            fromY = 10,
+            fromY = 11,
             toX = 4,
-            toY = 10,
+            toY = 11,
             trigger = terminate,
         },
     }
