@@ -216,69 +216,8 @@ local function getNewest(type)
             end
         end
     end
-end
 
-local function installStable()
-    term.clear()
-    term.setCursorPos(1, 1)
-
-    print("Loading...")
-    local version = getNewest("stable")
-
-    term.clear()
-    term.setCursorPos(1, 1)
-    print("Stable release version:")
-    print(version)
-    print()
-    print("Install this version?")
-    print()
-    print("Yes")
-    print()
-    print("No")
-
-    local actions = {
-        {
-            fromX = 1,
-            fromY = 6,
-            toX = 3,
-            toY = 6,
-            trigger = function()
-                toInstall = getReleaseCommit("stable")
-                readyToInstall = true
-            end,
-        },
-        {
-            fromX = 1,
-            fromY = 8,
-            toX = 2,
-            toY = 8,
-            trigger = function()
-                readyToInstall = false
-            end,
-        },
-    }
-
-    while true do
-        local event, button, x, y = os.pullEvent("mouse_click")
-
-        if button == 1 then
-            local selected = -1
-            local adjX, adjY = adjustForWindowCoords(x, y)
-
-            for i, action in ipairs(actions) do
-
-                if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
-                    selected = i
-                    break
-                end
-            end
-
-            if selected ~= -1 then
-                actions[selected].trigger()
-                return
-            end
-        end
-    end
+    return nil
 end
 
 local function installBleedingEdge()
@@ -339,6 +278,117 @@ local function installBleedingEdge()
             if selected ~= -1 then
                 actions[selected].trigger()
                 return
+            end
+        end
+    end
+end
+
+local function installStable()
+    term.clear()
+    term.setCursorPos(1, 1)
+
+    print("Loading...")
+    local version = getNewest("stable")
+
+    term.clear()
+    term.setCursorPos(1, 1)
+
+    if version ~= nil then
+        print("Stable release version:")
+        print(version)
+        print()
+        print("Install this version?")
+        print()
+        print("Yes")
+        print()
+        print("No")
+
+        local actions = {
+            {
+                fromX = 1,
+                fromY = 6,
+                toX = 3,
+                toY = 6,
+                trigger = function()
+                    toInstall = getReleaseCommit("stable")
+                    readyToInstall = true
+                end,
+            },
+            {
+                fromX = 1,
+                fromY = 8,
+                toX = 2,
+                toY = 8,
+                trigger = function()
+                    readyToInstall = false
+                end,
+            },
+        }
+
+        while true do
+            local event, button, x, y = os.pullEvent("mouse_click")
+
+            if button == 1 then
+                local selected = -1
+                local adjX, adjY = adjustForWindowCoords(x, y)
+
+                for i, action in ipairs(actions) do
+
+                    if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                        selected = i
+                        break
+                    end
+                end
+
+                if selected ~= -1 then
+                    actions[selected].trigger()
+                    return
+                end
+            end
+        end
+    else
+        print("No stable releases available. Would you like to install the latest pre-release instead?")
+        print()
+        print("Yes")
+        print()
+        print("No") 
+        
+        local actions = {
+            {
+                fromX = 1,
+                fromY = 5,
+                toX = 3,
+                toY = 5,
+                trigger = installBleedingEdge,
+            },
+            {
+                fromX = 1,
+                fromY = 7,
+                toX = 2,
+                toY = 7,
+                trigger = terminate,
+            },
+        }
+
+        while true do
+            local event, button, x, y = os.pullEvent("mouse_click")
+
+            if button == 1 then
+                local selected = -1
+                local adjX, adjY = adjustForWindowCoords(x, y)
+
+                for i, action in ipairs(actions) do
+
+                    if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                        selected = i
+                        break
+                    end
+                end
+
+                if selected ~= -1 then
+                    actions[selected].trigger()
+                    return
+                end
             end
         end
     end
@@ -526,7 +576,13 @@ local function runInstallation()
 
     print("Installing...")
     local repoURL = "https://github.com/" .. owner .. "/" .. repo .. "/"
-    gitDownload(repoURL, toInstall, "/") 
+    gitDownload(repoURL, toInstall, "/downloads")
+    print("Cleaning up...")
+    fs.makeDir("/tmp")
+    fs.copy("/downloads/dungyOS", "/tmp")
+    fs.delete("/downloads")
+    fs.copy("/tmp/*", "/")
+    fs.delete("/tmp")
     print("All done!")
 
     sleep(1)
