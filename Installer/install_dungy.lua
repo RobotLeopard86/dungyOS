@@ -194,9 +194,9 @@ local function getReleaseCommit(type, ...)
         end
     elseif type == "version" then
         local version = arg[1]
-        local releaseData = fetchReleaseData("gson-parent-" .. version)
+        local releaseData = fetchReleaseData("dungy-v" .. version)
         if releaseData ~= nil then
-            return getCommitFromURL(fetchTagCommitUrl("gson-parent-" .. version))
+            return getCommitFromURL(fetchTagCommitUrl("dungy-v" .. version))
         end
     end
 
