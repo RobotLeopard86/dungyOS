@@ -44,21 +44,19 @@ end
 
 local function gitDownload(tree, output)
     local converted = convertURL(tree)
-    print("Making tree download request...")
+    print("Downloading tree...")
     local request = http.get(converted.apiPath)
     if request ~= nil then
         local contents = textutils.unserializeJSON(request.readAll())
         print("Tree downloaded!")
         print()
-        print("Downloading files:")
+        print("Downloading files...")
         for i, file in ipairs(contents.tree) do
-            print("#" .. i .. ": " .. fs.getName(file.path))
             if file.type == "blob" then
-                local request = http.get(converted.rawPath .. file.path)
+                local fileRequest = http.get(converted.rawPath .. file.path)
                 local handle = fs.open(output .. "/" .. file.path, "w")
                 handle.write(request.readAll())
                 handle.close()
-                request.close()
             elseif file.type == "tree" then
                 fs.makeDir(output .. "/" .. file.path)
             end
@@ -237,7 +235,7 @@ local function installBleedingEdge()
             toX = 3,
             toY = 6,
             trigger = function()
-                toInstall = getNewest("pre")
+                toInstall = getReleaseCommit("pre")
                 readyToInstall = true
             end,
         },
