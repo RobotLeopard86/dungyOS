@@ -569,7 +569,7 @@ local function runInstallation()
     print("Cleaning up...")
     fs.copy("/downloads/dungyOS", "/tmp")
     fs.delete("/downloads")
-    fs.copy("/tmp/*", "/")
+    fs.move("/tmp/*", "/")
     fs.delete("/tmp")
     print("All done!")
 
