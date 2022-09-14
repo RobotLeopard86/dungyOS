@@ -1,7 +1,20 @@
-print("Please enter repository owner:")
-local owner = read()
-print("Please enter repository name:")
-local repo = read()
+local owner = "RobotLeopard86"
+local repo = "dungyOS"
+
+local limitReq = http.get("https://api.github.com/rate_limit")
+
+if limitReq == nil then
+    print("You are offline! Make sure you have an internet connection, as the installer downloads files from GitHub.")
+    return
+end
+
+local limit = textutils.unserializeJSON(limitReq.readAll()).resources.core.remaining
+
+if limit < 3 then
+    local reset = os.date("%M", limit.resources.core.reset * 1000)
+    print("You have run out of GitHub API requests! Please try again in ")
+end
+
 print("Loading installer...")
 sleep(1)
 
@@ -55,7 +68,7 @@ local function gitDownload(tree, output)
             if file.type == "blob" then
                 local fileRequest = http.get(converted.rawPath .. file.path)
                 local handle = fs.open(output .. "/" .. file.path, "w")
-                handle.write(request.readAll())
+                handle.write(fileRequest.readAll())
                 handle.close()
             elseif file.type == "tree" then
                 fs.makeDir(output .. "/" .. file.path)
@@ -569,7 +582,9 @@ local function runInstallation()
     print("Cleaning up...")
     fs.copy("/downloads/dungyOS", "/tmp")
     fs.delete("/downloads")
-    fs.move("/tmp/*", "/")
+    for _, object in ipairs(fs.list("/tmp")) do
+        fs.copy("/tmp/" .. object, "/" .. object)
+    end
     fs.delete("/tmp")
     print("All done!")
 
