@@ -375,7 +375,9 @@ local function installStable()
                 fromY = 7,
                 toX = 2,
                 toY = 7,
-                trigger = terminate,
+                trigger = function()
+                    readyToInstall = false
+                end,
             },
         }
 
@@ -597,7 +599,7 @@ local function finishPostInstall()
     for index, user in ipairs(postInstallPrefs.users) do
         local toInsert = {
             filename = tostring(index - 1) .. ".usr",
-            data = {
+            usr = {
                 username = user.usr,
                 displayname = user.dname,
                 password = user.password,
@@ -605,7 +607,7 @@ local function finishPostInstall()
             }
         }
         if user.administrator == true then
-            toInsert.data.permissions = "ADMIN"
+            toInsert.usr.permissions = "ADMIN"
         end
         table.insert(userData, toInsert)
     end
@@ -613,7 +615,7 @@ local function finishPostInstall()
     if postInstallPrefs.enableRoot == true then
         table.insert(userData, {
             filename = "root.usr",
-            data = {
+            usr = {
                 username = "root",
                 displayname = "ROOT",
                 password = postInstallPrefs.rootPassword,
@@ -630,7 +632,7 @@ local function finishPostInstall()
 
     for _, data in ipairs(userData) do
         local handle = fs.open("/.system-storage/users/" .. data.filename, "w")
-        handle.write(textutils.serializeJSON(userData.data))
+        handle.write(textutils.serializeJSON(data.usr))
         handle.close()
     end
 
@@ -737,7 +739,7 @@ local function piAddUser()
     print()
     print("No")
 
-    local actions = {
+    local newUsr = {
         {
             fromX = 1,
             fromY = 6,
@@ -753,6 +755,28 @@ local function piAddUser()
             trigger = finishPostInstall,
         },
     }
+
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+
+        if button == 1 then
+            local selected = -1
+            local adjX, adjY = adjustForWindowCoords(x, y)
+
+            for i, action in ipairs(newUsr) do
+
+                if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                    selected = i
+                    break
+                end
+            end
+
+            if selected ~= -1 then
+                newUsr[selected].trigger()
+                break
+            end
+        end
+    end
 end
 
 local function piRootConf()
