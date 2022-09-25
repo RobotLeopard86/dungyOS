@@ -131,6 +131,12 @@ paintutils.drawImage(bgImage, 1, 1)
 local readyToInstall = false
 local toInstall = ""
 
+local postInstallPrefs = {
+    enableRoot = false,
+    rootPassword = "",
+    users = {}
+}
+
 local content = window.create(term.current(), 1, 7, 33, 200, true)
 term.redirect(content)
 
@@ -549,17 +555,291 @@ local function drawFirstScreen()
     end
 end
 
+local function finishPostInstall()
+    term.clear()
+    term.setCursorPos(1, 1)
+    print("dungyOS Post-Install Setup")
+    print("Finalization")
+    print()
+    term.write("Task 1/4 (Set Up Hashing)...")
+
+    local r = require "cc.require"
+    local env = setmetatable({}, { __index = _ENV })
+    env.require = r.make(env, "/.packages/net.dungy.sha")
+    local sha = env.require("sha")
+
+    local shandle = fs.open("/.system-storage/salt.txt", "r")
+    local salt = shandle.readAll()
+    shandle.close()
+
+    term.write(" Done!")
+    sleep(1)
+    term.setCursorPos(1, 4)
+    term.clearLine()
+    term.write("Task 2/4 (Hash Passwords)...")
+
+    if postInstallPrefs.enableRoot == true then
+        postInstallPrefs.rootPassword = sha(postInstallPrefs.rootPassword .. salt)
+    end
+
+    for _, usr in ipairs(postInstallPrefs.users) do
+        usr.password = sha(usr.password .. salt)
+    end
+
+    term.write(" Done!")
+    sleep(1)
+    term.setCursorPos(1, 4)
+    term.clearLine()
+    term.write("Task 3/4 (Generate User Data)...")
+
+    local userData = {}
+
+    for index, user in ipairs(postInstallPrefs.users) do
+        local toInsert = {
+            filename = tostring(index - 1) .. ".usr",
+            data = {
+                username = user.usr,
+                displayname = user.dname,
+                password = user.password,
+                permissions = "USER"
+            }
+        }
+        if user.administrator == true then
+            toInsert.data.permissions = "ADMIN"
+        end
+        table.insert(userData, toInsert)
+    end
+
+    if postInstallPrefs.enableRoot == true then
+        table.insert(userData, {
+            filename = "root.usr",
+            data = {
+                username = "root",
+                displayname = "ROOT",
+                password = postInstallPrefs.rootPassword,
+                permissions = "SUPERUSER"
+            }
+        })
+    end
+
+    term.write(" Done!")
+    sleep(1)
+    term.setCursorPos(1, 4)
+    term.clearLine()
+    term.write("Task 4/4 (Write User Data)...")
+
+    for _, data in ipairs(userData) do
+        local handle = fs.open("/.system-storage/users/" .. data.filename, "w")
+        handle.write(textutils.serializeJSON(userData.data))
+        handle.close()
+    end
+
+    print(" Done!")
+    sleep(1)
+    print()
+    print("Finished! Rebooting in 3 seconds...")
+    sleep(3)
+    os.reboot()
+end
+
+local function piAddUser()
+    term.clear()
+    term.setCursorPos(1, 1)
+    print("dungyOS Post-Install Setup")
+    print("Add User")
+    print()
+    print("Enter your username:")
+    local uname = read()
+    print("Enter your display name:")
+    local disp = read()
+    print("Enter your password:")
+    local pwd = read("*")
+    print("Confirm your password:")
+    local pwdConfirm = read("*")
+
+    if pwd ~= pwdConfirm then
+        printError("Passwords do not match!")
+        sleep(1)
+        piAddUser()
+    end
+
+    local isAdmin = false
+
+    term.clear()
+    term.setCursorPos(1, 1)
+    print("dungyOS Post-Install Setup")
+    print("Add User")
+    print()
+    print("Would you like to be an admin?")
+    print()
+    print("Yes")
+    print()
+    print("No")
+
+    local actions = {
+        {
+            fromX = 1,
+            fromY = 6,
+            toX = 3,
+            toY = 6,
+            trigger = function()
+                isAdmin = true
+            end,
+        },
+        {
+            fromX = 1,
+            fromY = 8,
+            toX = 2,
+            toY = 8,
+            trigger = function()
+                isAdmin = false
+            end,
+        },
+    }
+
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+
+        if button == 1 then
+            local selected = -1
+            local adjX, adjY = adjustForWindowCoords(x, y)
+
+            for i, action in ipairs(actions) do
+
+                if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                    selected = i
+                    break
+                end
+            end
+
+            if selected ~= -1 then
+                actions[selected].trigger()
+                break
+            end
+        end
+    end
+
+    table.insert(postInstallPrefs.users, {
+        usr = uname,
+        dname = disp,
+        password = pwd,
+        administrator = isAdmin
+    })
+
+    term.clear()
+    term.setCursorPos(1, 1)
+    print("dungyOS Post-Install Setup")
+    print("Add Users")
+    print()
+    print("Do you want to add another user?")
+    print()
+    print("Yes")
+    print()
+    print("No")
+
+    local actions = {
+        {
+            fromX = 1,
+            fromY = 6,
+            toX = 3,
+            toY = 6,
+            trigger = piAddUser,
+        },
+        {
+            fromX = 1,
+            fromY = 8,
+            toX = 2,
+            toY = 8,
+            trigger = finishPostInstall,
+        },
+    }
+end
+
+local function piRootConf()
+    term.clear()
+    term.setCursorPos(1, 1)
+    print("dungyOS Post-Install Setup")
+    print("Root User Configuration")
+    print()
+    print("Enter root user password:")
+    local pwd = read("*")
+    print("Confirm root user password:")
+    local pwdConfirm = read("*")
+
+    if pwd ~= pwdConfirm then
+        printError("Passwords do not match!")
+        sleep(1)
+        piRootConf()
+    end
+
+    postInstallPrefs.rootPassword = pwd
+    piAddUser()
+end
+
+local function piDoEnableRoot()
+    print("dungyOS Post-Install Setup")
+    print("Root User Configuration")
+    print()
+    print("Enable root user?")
+    print()
+    print("Yes")
+    print()
+    print("No")
+
+    local actions = {
+        {
+            fromX = 1,
+            fromY = 6,
+            toX = 3,
+            toY = 6,
+            trigger = function()
+                postInstallPrefs.enableRoot = true
+                piRootConf()
+            end,
+        },
+        {
+            fromX = 1,
+            fromY = 8,
+            toX = 2,
+            toY = 8,
+            trigger = function()
+                postInstallPrefs.enableRoot = false
+                piAddUser()
+            end,
+        },
+    }
+
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+
+        if button == 1 then
+            local selected = -1
+            local adjX, adjY = adjustForWindowCoords(x, y)
+
+            for i, action in ipairs(actions) do
+
+                if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                    selected = i
+                    break
+                end
+            end
+
+            if selected ~= -1 then
+                actions[selected].trigger()
+                return
+            end
+        end
+    end
+end
+
 local function postInstall()
     term.clear()
     term.setCursorPos(1, 1)
-    print("dungyOS has successfully been installed on your computer. Thanks for choosing dungyOS. In just a few moments, post-install setup will begin.")
+    print("dungyOS has successfully been installed on your computer. In just a few moments, post-install setup will begin.")
     sleep(3)
-    print()
-
-    print("Starting post-install setup...")
-    while true do
-        sleep(0.05)
-    end
+    term.clear()
+    term.setCursorPos(1, 1)
+    piDoEnableRoot()
 end
 
 local function runInstallation()
