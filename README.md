@@ -1,7 +1,7 @@
 # dungyOS  
 ## What is dungyOS?  
 dungyOS (dun-jee-oh-ess) is an operating system for the ComputerCraft mod for Minecraft. It is named for the dungeness crab, hence the name dungyOs, "dungy" being short for dungeness.  
-## Features (not all completed yet)  
+## Planned Features 
 * Graphical interface
 * Full command line  
 * Multiple users  
