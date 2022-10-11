@@ -1,4 +1,4 @@
-local hash = require("net.dungy.sha", "sha")
+local hash = require("net.dungy.sha", "sha", true)
 
 term.clear();
 

@@ -274,9 +274,13 @@ parentTerm.clear()
 setMenuVisible(false)
 local r = require "cc.require"
 
-local function betterRequire(packageName, file)
+local function betterRequire(packageName, file, isSystemPackage)
     local env = setmetatable({}, { __index = _ENV })
-    env.require = r.make(env, "/.packages/" .. packageName)
+    if isSystemPackage == true then
+        env.require = r.make(env, "/.system/.system-packages/" .. packageName)
+    else
+        env.require = r.make(env, "/.users/.packages/" .. packageName)
+    end
     return env.require(file)
 end
 
@@ -289,7 +293,7 @@ launchProcess(true, {
     ["multishell"] = multishell,
     ["require"] = betterRequire,
     ["salt"] = salty
-}, "/.packages/net.dungy.login/login.lua")
+}, "/.system/.system-packages/net.dungy.login/login.lua")
 
 -- Run processes
 while #tProcesses > 0 do
