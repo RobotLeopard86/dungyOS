@@ -2,7 +2,7 @@ local hash = require("net.dungy.sha", "sha", true)
 
 term.clear();
 
-local bg = paintutils.loadImage("/.packages/net.dungy.login/loginbg.ccimg")
+local bg = paintutils.loadImage("/.system/.system-packages/net.dungy.login/loginbg.ccimg")
 paintutils.drawImage(bg, 1, 1)
 
 term.setBackgroundColor(colors.lightGray)
