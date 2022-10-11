@@ -280,7 +280,7 @@ local function betterRequire(packageName, file)
     return env.require(file)
 end
 
-local handle = fs.open("/.system-storage/salt.txt", "r")
+local handle = fs.open("/.system/.system-storage/salt.txt", "r")
 local salty = handle.readAll()
 handle.close()
 

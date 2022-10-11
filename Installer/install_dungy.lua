@@ -570,7 +570,7 @@ local function finishPostInstall()
     env.require = r.make(env, "/.packages/net.dungy.sha")
     local sha = env.require("sha")
 
-    local shandle = fs.open("/.system-storage/salt.txt", "r")
+    local shandle = fs.open("/.system/.system-storage/salt.txt", "r")
     local salt = shandle.readAll()
     shandle.close()
 
@@ -631,7 +631,7 @@ local function finishPostInstall()
     term.write("Task 4/4 (Write User Data)...")
 
     for _, data in ipairs(userData) do
-        local handle = fs.open("/.system-storage/users/" .. data.filename, "w")
+        local handle = fs.open("/.system/.system/.system-storage/users/" .. data.filename, "w")
         handle.write(textutils.serializeJSON(data.usr))
         handle.close()
     end

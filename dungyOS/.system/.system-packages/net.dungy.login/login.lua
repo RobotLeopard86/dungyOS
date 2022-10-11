@@ -85,13 +85,13 @@ end
 local function drawUsernames()
     window.clear()
 
-    local filenames = fs.list("/.system-storage/users")
+    local filenames = fs.list("/.system/.system-storage/users")
 
     local users = {}
     local actions = {}
     
     for _, file in ipairs(filenames) do
-        local path = "/.system-storage/users/" .. file
+        local path = "/.system/.system-storage/users/" .. file
         local handle = fs.open(path, "r")
         table.insert(users, textutils.unserializeJSON(handle.readAll()))
         handle.close()
