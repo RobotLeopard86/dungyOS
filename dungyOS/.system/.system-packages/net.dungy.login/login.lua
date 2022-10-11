@@ -70,7 +70,7 @@ local function password(user)
             ["require"] = require,
             ["read"] = read,
             ["user"] = usrData
-        }, "/.packages/net.dungy.desktop/temp_desktop.lua")
+        }, "/.system/.system-packages/net.dungy.desktop/temp_desktop.lua")
         multishell.setFocus(tabId)
         return
     else
