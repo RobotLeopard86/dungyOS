@@ -58,19 +58,13 @@ local function password(user)
         drawCentered("Logging you in...", 2)
         sleep(1)
 
-        local usrData = {
+        userdata = {
             username = user.username,
             displayname = user.displayname,
             permission = user.permissions
         }
 
-        local tabId = multishell.launch({
-            ["shell"] = shell,
-            ["multishell"] = multishell,
-            ["require"] = require,
-            ["read"] = read,
-            ["user"] = usrData
-        }, "/.system/.system-packages/net.dungy.desktop/temp_desktop.lua")
+        local tabId = multishell.launch({}, "/.system/.system-packages/net.dungy.desktop/temp_desktop.lua")
         multishell.setFocus(tabId)
         return
     else

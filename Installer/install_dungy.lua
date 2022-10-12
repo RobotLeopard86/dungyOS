@@ -63,7 +63,7 @@ local function gitDownload(tree, output)
         local contents = textutils.unserializeJSON(request.readAll())
         print("Tree downloaded!")
         print()
-        print("Downloading files...")
+        term.write("Downloading files... (0/" .. #contents.tree .. ")")
         for i, file in ipairs(contents.tree) do
             if file.type == "blob" then
                 local fileRequest = http.get(converted.rawPath .. file.path)
@@ -73,6 +73,10 @@ local function gitDownload(tree, output)
             elseif file.type == "tree" then
                 fs.makeDir(output .. "/" .. file.path)
             end
+            term.clearLine()
+            local x, y = term.getCursorPos()
+            term.setCursorPos(1, y)
+            term.write("Downloading files... (" .. i .. "/" .. #contents.tree .. ")")
         end
     end
 end
@@ -563,7 +567,7 @@ local function finishPostInstall()
     print("dungyOS Post-Install Setup")
     print("Finalization")
     print()
-    term.write("Task 1/4 (Set Up Hashing)...")
+    term.write("Task 1/5 (Set Up Hashing)...")
 
     local r = require "cc.require"
     local env = setmetatable({}, { __index = _ENV })
@@ -578,7 +582,7 @@ local function finishPostInstall()
     sleep(1)
     term.setCursorPos(1, 4)
     term.clearLine()
-    term.write("Task 2/4 (Hash Passwords)...")
+    term.write("Task 2/5 (Hash Passwords)...")
 
     if postInstallPrefs.enableRoot == true then
         postInstallPrefs.rootPassword = sha(postInstallPrefs.rootPassword .. salt)
@@ -592,7 +596,7 @@ local function finishPostInstall()
     sleep(1)
     term.setCursorPos(1, 4)
     term.clearLine()
-    term.write("Task 3/4 (Generate User Data)...")
+    term.write("Task 3/5 (Generate User Data)...")
 
     local userData = {}
 
@@ -628,7 +632,7 @@ local function finishPostInstall()
     sleep(1)
     term.setCursorPos(1, 4)
     term.clearLine()
-    term.write("Task 4/4 (Write User Data)...")
+    term.write("Task 4/5 (Write User Data)...")
 
     for _, data in ipairs(userData) do
         local handle = fs.open("/.system/.system/.system-storage/users/" .. data.filename, "w")
@@ -636,10 +640,21 @@ local function finishPostInstall()
         handle.close()
     end
 
+    term.write(" Done!")
+    sleep(1)
+    term.setCursorPos(1, 4)
+    term.clearLine()
+    term.write("Task 5/5 (Generate Filesystems)...")
+
+    for _, data in ipairs(userData) do
+        fs.makeDir("/.users/.filesystem/" .. data.username)
+        fs.makeDir("/.users/.packages/" .. data.username)
+    end
+
     print(" Done!")
     sleep(1)
     print()
-    print("Finished! Rebooting in 3 seconds...")
+    print("Finished! Rebooting...")
     sleep(3)
     os.reboot()
 end
@@ -896,6 +911,17 @@ local function runInstallation()
     postInstall()
 end
 
+local function noPowerOff()
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setTextColor(colors.lime)
+    print("Please do not power off your computer until the installation and post-install setup have been completed and the computer has rebooted. If you do power off, the operating system will be in a broken state, and will have to be reinstalled.")
+    print()
+    print("Continuing in 5 seconds...")
+    sleep(5)
+    runInstallation()
+end
+
 local function installerWarning()
     os.pullEvent = os.pullEventRaw
     term.clear()
@@ -915,7 +941,7 @@ local function installerWarning()
             fromY = 9,
             toX = 8,
             toY = 9,
-            trigger = runInstallation,
+            trigger = noPowerOff,
         },
         {
             fromX = 1,

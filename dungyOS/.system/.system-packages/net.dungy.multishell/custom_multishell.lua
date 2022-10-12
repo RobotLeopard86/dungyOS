@@ -19,6 +19,8 @@
 
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
+local userdat = {}
+
 -- Setup process switching
 local parentTerm = term.current()
 local w, h = parentTerm.getSize()
@@ -155,6 +157,18 @@ local function setMenuVisible(bVis)
     end
 end
 
+local r = require "cc.require"
+
+local function betterRequire(packageName, file, isSystemPackage)
+    local env = setmetatable({}, { __index = _ENV })
+    if isSystemPackage == true then
+        env.require = r.make(env, "/.system/.system-packages/" .. packageName)
+    else
+        env.require = r.make(env, "/.users/.packages/" .. userdat.username .. "/" .. packageName)
+    end
+    return env.require(file)
+end
+
 local multishell = {} --- @export
 
 --- Get the currently visible process. This will be the one selected on
@@ -256,6 +270,12 @@ function multishell.launch(tProgramEnv, sProgramPath, ...)
     expect(1, tProgramEnv, "table")
     expect(2, sProgramPath, "string")
     local previousTerm = term.current()
+    tProgramEnv["require"] = betterRequire
+    tProgramEnv["shell"] = shell
+    tProgramEnv["user"] = userdat
+    tProgramEnv["multishell"] = multishell
+    tProgramEnv["settings"] = {}
+    tProgramEnv["io"] = {}
     local nResult = launchProcess(false, tProgramEnv, sProgramPath, ...)
     redrawMenu()
     term.redirect(previousTerm)
@@ -272,17 +292,6 @@ end
 -- Begin
 parentTerm.clear()
 setMenuVisible(false)
-local r = require "cc.require"
-
-local function betterRequire(packageName, file, isSystemPackage)
-    local env = setmetatable({}, { __index = _ENV })
-    if isSystemPackage == true then
-        env.require = r.make(env, "/.system/.system-packages/" .. packageName)
-    else
-        env.require = r.make(env, "/.users/.packages/" .. packageName)
-    end
-    return env.require(file)
-end
 
 local handle = fs.open("/.system/.system-storage/salt.txt", "r")
 local salty = handle.readAll()
@@ -292,7 +301,8 @@ launchProcess(true, {
     ["shell"] = shell,
     ["multishell"] = multishell,
     ["require"] = betterRequire,
-    ["salt"] = salty
+    ["salt"] = salty,
+    ["userdata"] = userdat
 }, "/.system/.system-packages/net.dungy.login/login.lua")
 
 -- Run processes
