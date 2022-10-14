@@ -571,7 +571,7 @@ local function finishPostInstall()
 
     local r = require "cc.require"
     local env = setmetatable({}, { __index = _ENV })
-    env.require = r.make(env, "/.packages/net.dungy.sha")
+    env.require = r.make(env, "/.system/.system-packages/net.dungy.sha")
     local sha = env.require("sha")
 
     local shandle = fs.open("/.system/.system-storage/salt.txt", "r")
