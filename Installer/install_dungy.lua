@@ -635,7 +635,7 @@ local function finishPostInstall()
     term.write("Task 4/5 (Write User Data)...")
 
     for _, data in ipairs(userData) do
-        local handle = fs.open("/.system/.system/.system-storage/users/" .. data.filename, "w")
+        local handle = fs.open("/.system/.system-storage/users/" .. data.filename, "w")
         handle.write(textutils.serializeJSON(data.usr))
         handle.close()
     end
