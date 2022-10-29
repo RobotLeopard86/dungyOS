@@ -647,8 +647,8 @@ local function finishPostInstall()
     term.write("Task 5/5 (Generate Filesystems)...")
 
     for _, data in ipairs(userData) do
-        fs.makeDir("/.users/.filesystem/" .. data.username)
-        fs.makeDir("/.users/.packages/" .. data.username)
+        fs.makeDir("/.users/.filesystem/" .. data.usr.username)
+        fs.makeDir("/.users/.packages/" .. data.usr.username)
     end
 
     print(" Done!")
