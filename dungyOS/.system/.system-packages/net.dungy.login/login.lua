@@ -150,7 +150,7 @@ local function drawUsernames()
                     windowScroll = windowScroll - 2
                     
                     window.clear()
-                    drawIndex = 1
+                    drawIndex = 3
                     for _, usr in ipairs(users) do
                         window.setCursorPos(1, drawIndex)
                         window.write(usr.displayname)
