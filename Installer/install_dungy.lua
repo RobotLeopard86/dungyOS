@@ -432,14 +432,7 @@ local function installOther()
     print("Checking if version exists...")
     local commit = getReleaseCommit("version", input)
 
-    if commit == nil then
-        print()
-        term.setTextColor(colors.red)
-        print("Version " .. input .. " does not exist! Try again.")
-        sleep(2)
-        term.setTextColor(colors.lime)
-        installOther()
-    elseif allowDev == true and input == "latest-commit" then
+    if allowDev == true and input == "latest-commit" then
         print()
         term.setTextColor(colors.red)
         print("WARNING! You have chosen to install the latest commit version. This version of dungyOS may be completely broken. Proceed at your own risk!")
@@ -499,6 +492,15 @@ local function installOther()
                 end
             end
         end
+    end
+
+    if commit == nil then
+        print()
+        term.setTextColor(colors.red)
+        print("Version " .. input .. " does not exist! Try again.")
+        sleep(2)
+        term.setTextColor(colors.lime)
+        installOther()
     else
         print()
         term.setTextColor(colors.lightBlue)
