@@ -114,7 +114,7 @@ local function drawUsernames()
         handle.close()
     end
 
-    window.setCursorPos(1, 3)
+    window.setCursorPos(1, 1)
     window.write("Press Right Control to go back")
 
     local drawIndex = 3
