@@ -463,7 +463,7 @@ local function installOther()
                 toX = 3,
                 toY = 6,
                 trigger = function()
-                    toInstall = commit
+                    toInstall = "main"
                     readyToInstall = true
                 end,
             },
