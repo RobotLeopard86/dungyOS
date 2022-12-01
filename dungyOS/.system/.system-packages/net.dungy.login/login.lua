@@ -9,7 +9,6 @@ term.setBackgroundColor(colors.lightGray)
 term.setTextColor(colors.blue)
 term.setCursorPos(1, 7)
 print("Welcome to dungyOS!")
-print("Please select an option:")
 
 local window = window.create(term.current(), 1, 10, 33, 200, true)
 window.setBackgroundColor(colors.lightGray)
