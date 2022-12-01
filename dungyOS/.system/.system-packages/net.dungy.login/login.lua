@@ -117,7 +117,7 @@ local function drawUsernames()
     window.setCursorPos(1, 1)
     window.write("Press Right Control to go back")
 
-    local drawIndex = 1
+    local drawIndex = 3
 
     for _, usr in ipairs(users) do
         window.setCursorPos(1, drawIndex)
@@ -148,9 +148,12 @@ local function drawUsernames()
             else if pressed == keys.up then
                 if windowScroll > 1 then
                     windowScroll = windowScroll - 2
+
+                    window.setCursorPos(1, 1)
+                    window.write("Press Right Control to go back")
                     
                     window.clear()
-                    drawIndex = 1
+                    drawIndex = 3
                     for _, usr in ipairs(users) do
                         window.setCursorPos(1, drawIndex)
                         window.write(usr.displayname)
