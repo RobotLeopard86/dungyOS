@@ -1,5 +1,9 @@
+local args = {...}
+
 local owner = "RobotLeopard86"
 local repo = "dungyOS"
+
+local allowDev = false
 
 local limitReq = http.get("https://api.github.com/rate_limit")
 
@@ -15,8 +19,17 @@ if limit < 3 then
     print("You have run out of GitHub API requests! Please try again in ")
 end
 
+if #args > 0 and args[1] == "--dev" then
+    allowDev = true
+end
+
 print("Loading installer...")
 sleep(1)
+
+if allowDev == true then
+    printError("[WARNING] Dev mode is active")
+    sleep(1)
+end
 
 local expect = require "cc.expect".expect
 
@@ -426,6 +439,66 @@ local function installOther()
         sleep(2)
         term.setTextColor(colors.lime)
         installOther()
+    elseif allowDev == true and input == "latest-commit" then
+        print()
+        term.setTextColor(colors.red)
+        print("WARNING! You have chosen to install the latest commit version. This version of dungyOS may be completely broken. Proceed at your own risk!")
+        sleep(2)
+
+        term.setCursorPos(1, 1)
+        term.clear()
+        print("Selected version:")
+        print(input)
+        print()
+        print("Install this version?")
+        print()
+        print("Yes")
+        print()
+        print("No")
+
+        local actions = {
+            {
+                fromX = 1,
+                fromY = 6,
+                toX = 3,
+                toY = 6,
+                trigger = function()
+                    toInstall = commit
+                    readyToInstall = true
+                end,
+            },
+            {
+                fromX = 1,
+                fromY = 8,
+                toX = 2,
+                toY = 8,
+                trigger = function()
+                    readyToInstall = false
+                end,
+            },
+        }
+
+        while true do
+            local event, button, x, y = os.pullEvent("mouse_click")
+
+            if button == 1 then
+                local selected = -1
+                local adjX, adjY = adjustForWindowCoords(x, y)
+
+                for i, action in ipairs(actions) do
+
+                    if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                        selected = i
+                        break
+                    end
+                end
+
+                if selected ~= -1 then
+                    actions[selected].trigger()
+                    return
+                end
+            end
+        end
     else
         print()
         term.setTextColor(colors.lightBlue)

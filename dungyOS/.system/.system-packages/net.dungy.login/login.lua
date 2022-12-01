@@ -12,7 +12,7 @@ print("Welcome to dungyOS!")
 print("Please select an option:")
 
 local window = window.create(term.current(), 1, 10, 33, 200, true)
-window.setBackgroundColor(colors.white)
+window.setBackgroundColor(colors.lightGray)
 window.setTextColor(colors.blue)
 
 local function adjustForWindowCoords(x, y)
@@ -35,18 +35,41 @@ local function saltAndHash(value)
     return hashedInput
 end
 
+local function getInput()
+    return read("*")
+end
+
+local function cancelInput()
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+        if button == 1 and x >= 1 and x <= 4 and y == 1 then
+            break
+        end
+    end
+    return nil
+end
+
 local function password(user)
     window.clear()
     window.setTextColor(colors.blue)
-    drawCentered("Hi, " .. user.displayname .. "!", 1)
-    drawCentered("Please enter your password:", 2)
-    window.setCursorPos(1, 4)
+    drawCentered("Hi, " .. user.displayname .. "!", 3)
+    drawCentered("Please enter your password:", 4)
+    window.setTextColor(colors.red)
+    window.setCursorPos(1, 1)
+    window.write("Back")
+    window.setTextColor(colors.blue)
+    window.setCursorPos(1, 6)
     window.setBackgroundColor(colors.white)
     window.write("                                 ")
-    window.setCursorPos(1, 4)
+    window.setCursorPos(1, 6)
     local default = term.current()
     term.redirect(window)
-    local inputtedPassword = read("*")
+    local inputtedPassword = parallel.waitForAny(getInput, cancelInput)
+
+    if inputtedPassword == nil then
+        drawUsernames()
+    end
+
     term.redirect(default)
     local hashed = saltAndHash(inputtedPassword)
 
