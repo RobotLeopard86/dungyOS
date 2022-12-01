@@ -204,6 +204,74 @@ local function hashing()
     os.reboot()
 end
 
+local function runUninstallation()
+    window.clear()
+    window.setCursorPos(1, 1)
+    window.write("dungyOS is uninstalling. Do not power your computer off.")
+    fs.delete("/.users")
+    fs.delete("/startup.lua")
+    fs.delete("/.settings")
+    fs.delete("/.system")
+    window.clear()
+    window.setCursorPos(1, 1)
+    window.write("dungyOS has been uninstalled. We're sad to see you go. Goodbye.")
+    sleep(2)
+    os.reboot()
+end
+
+local function uninstall()
+    window.clear()
+    window.setCursorPos(1, 1)
+    local default = term.current()
+    term.redirect(window)
+    print("WARNING: Uninstalling will delete ALL data on the computer, including personal files. This cannot be undone. Are you sure you want to proceed?")
+    term.redirect(default)
+
+    window.setCursorPos(1, 6)
+    window.write("Cancel")
+    window.setCursorPos(1, 8)
+    window.write("Proceed")
+
+    local actions = {
+        {
+            fromX = 1,
+            fromY = 6,
+            toX = 6,
+            toY = 6,
+            trigger = drawFirstOptions
+        },
+        {
+            fromX = 1,
+            fromY = 7,
+            toX = 6,
+            toY = 7,
+            trigger = runUninstallation
+        }
+    }
+
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+
+        if button == 1 then
+            local selected = -1
+            local adjX, adjY = adjustForWindowCoords(x, y)
+
+            for i, action in ipairs(actions) do
+
+                if adjX >= action.fromX and adjX <= action.toX and adjY >= action.fromY and adjY <= action.toY then
+                    selected = i
+                    break
+                end
+            end
+
+            if selected ~= -1 then
+                actions[selected].trigger()
+                return
+            end
+        end
+    end
+end
+
 local function drawFirstOptions()
     window.clear()
     window.setCursorPos(1, 1)
@@ -213,6 +281,8 @@ local function drawFirstOptions()
     window.setCursorPos(1, 5)
     window.write("Shut down")
     window.setCursorPos(1, 7)
+    window.write("Uninstall dungyOS")
+    window.setCursorPos(1, 9)
     window.write("Hashing (DEV TOOL)")
 
     local actions = {
@@ -240,8 +310,15 @@ local function drawFirstOptions()
         {
             fromX = 1,
             fromY = 7,
-            toX = 18,
+            toX = 17,
             toY = 7,
+            trigger = uninstall
+        },
+        {
+            fromX = 1,
+            fromY = 9,
+            toX = 18,
+            toY = 9,
             trigger = hashing
         }
     }
