@@ -40,34 +40,32 @@ local function getInput()
 end
 
 local function cancelInput()
-    while true do
-        local event, button, x, y = os.pullEvent("mouse_click")
-        if button == 1 and x >= 1 and x <= 4 and y == 1 then
-            break
-        end
-    end
+    repeat
+        local event, key = os.pullEvent("key")
+    until key == keys.rightCtrl
     return nil
 end
 
 local function password(user)
     window.clear()
     window.setTextColor(colors.blue)
-    drawCentered("Hi, " .. user.displayname .. "!", 3)
-    drawCentered("Please enter your password:", 4)
-    window.setTextColor(colors.red)
-    window.setCursorPos(1, 1)
-    window.write("Back")
+    drawCentered("Hi, " .. user.displayname .. "!", 1)
+    drawCentered("Press Right Control to go back", 7)
+    drawCentered("Please enter your password:", 3)
     window.setTextColor(colors.blue)
-    window.setCursorPos(1, 6)
-    window.setBackgroundColor(colors.white)
+    window.setCursorPos(1, 5)
+    window.setBackgroundColor(colors.lightGray)
     window.write("                                 ")
-    window.setCursorPos(1, 6)
+    window.setCursorPos(1, 5)
     local default = term.current()
     term.redirect(window)
     local inputtedPassword = parallel.waitForAny(getInput, cancelInput)
 
     if inputtedPassword == nil then
+        print("MOO")
+        sleep(1)
         drawUsernames()
+        return
     end
 
     term.redirect(default)
@@ -90,7 +88,7 @@ local function password(user)
         local tabId = multishell.launch({}, "/.system/.system-packages/net.dungy.desktop/temp_desktop.lua")
         multishell.setFocus(tabId)
         return
-    else
+    elseif inputtedPassword ~= nil then
         window.setTextColor(colors.red)
         drawCentered("Incorrect password.", 1)
         drawCentered("Please try again.", 2)
