@@ -46,6 +46,9 @@ local function cancelInput()
     return nil
 end
 
+local triggerHome
+local triggerUsers
+
 local function password(user)
     window.clear()
     window.setTextColor(colors.blue)
@@ -62,9 +65,7 @@ local function password(user)
     local inputtedPassword = parallel.waitForAny(getInput, cancelInput)
 
     if inputtedPassword == nil then
-        print("MOO")
-        sleep(1)
-        drawUsernames()
+        triggerUsers()
         return
     end
 
@@ -98,6 +99,7 @@ local function password(user)
 end
 
 local function drawUsernames()
+    triggerUsers = drawUsernames
     window.clear()
 
     local filenames = fs.list("/.system/.system-storage/users")
@@ -112,7 +114,10 @@ local function drawUsernames()
         handle.close()
     end
 
-    local drawIndex = 1
+    window.setCursorPos(1, 3)
+    window.write("Press Right Control to go back")
+
+    local drawIndex = 3
 
     for _, usr in ipairs(users) do
         window.setCursorPos(1, drawIndex)
@@ -154,9 +159,11 @@ local function drawUsernames()
 
                     window.scroll(windowScroll - 1)
                 end
+            else if pressed == keys.rightCtrl then
+                triggerHome()
             end
         end
-        else if event == "mouse_click" and pressed == 1 then
+        if event == "mouse_click" and pressed == 1 then
                 local selected = -1
                 local adjX, adjY = adjustForWindowCoordsWhenScrolling(x, y, windowScroll - 1)
 
@@ -175,6 +182,7 @@ local function drawUsernames()
             end
         end
     end
+end
 end
 
 local function hashing()
@@ -208,13 +216,17 @@ local function runUninstallation()
     window.clear()
     window.setCursorPos(1, 1)
     window.write("dungyOS is uninstalling. Do not power your computer off.")
+    sleep(1)
     fs.delete("/.users")
     fs.delete("/startup.lua")
     fs.delete("/.settings")
     fs.delete("/.system")
+    sleep(1)
     window.clear()
     window.setCursorPos(1, 1)
-    window.write("dungyOS has been uninstalled. We're sad to see you go. Goodbye.")
+    local default = term.current()
+    term.redirect(window)
+    print("dungyOS has been uninstalled. We're sad to see you go. Goodbye.")
     sleep(2)
     os.reboot()
 end
@@ -238,13 +250,13 @@ local function uninstall()
             fromY = 6,
             toX = 6,
             toY = 6,
-            trigger = drawFirstOptions
+            trigger = triggerHome
         },
         {
             fromX = 1,
-            fromY = 7,
+            fromY = 8,
             toX = 6,
-            toY = 7,
+            toY = 8,
             trigger = runUninstallation
         }
     }
@@ -273,6 +285,7 @@ local function uninstall()
 end
 
 local function drawFirstOptions()
+    triggerHome = drawFirstOptions
     window.clear()
     window.setCursorPos(1, 1)
     window.write("Sign in")

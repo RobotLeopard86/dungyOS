@@ -4,7 +4,7 @@ if pocket or turtle then
 end
 
 if not term.isColor() then
-    printError("ERROR: dungyOS requires color!")
+    printError("ERROR: dungyOS requires an advanced computer!")
     return
 end
 
